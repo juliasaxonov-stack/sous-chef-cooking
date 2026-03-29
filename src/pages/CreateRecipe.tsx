@@ -109,7 +109,7 @@ const CreateRecipe = () => {
 
     try {
       if (isEdit) {
-        await updateRecipe.mutateAsync({ id, title, servings, ingredients: validIngredients, steps: validSteps });
+        await updateRecipe.mutateAsync({ id, title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
         toast.success("Recipe updated!");
         navigate(`/recipe/${id}`);
       } else {
