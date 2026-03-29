@@ -34,11 +34,18 @@ const CreateRecipe = () => {
     if (state?.imported) {
       setTitle(state.imported.title || "");
       setServings(state.imported.servings || 4);
+      if (state.imported.raw_recipe_text) {
+        setRawRecipeText(state.imported.raw_recipe_text);
+      }
       if (state.imported.ingredients?.length) {
         setIngredients(state.imported.ingredients.map((ing: any, i: number) => ({
           name: ing.name || "",
+          canonical_name: ing.canonical_name || "",
+          original_text: ing.original_text || "",
           quantity: ing.quantity || "",
           unit: ing.unit || "",
+          preparation: ing.preparation || "",
+          optional: ing.optional || false,
           sort_order: i,
         })));
       }
@@ -46,6 +53,8 @@ const CreateRecipe = () => {
         setSteps(state.imported.steps.map((s: any, i: number) => ({
           position: i + 1,
           instruction: s.instruction || s,
+          duration_minutes: s.duration_minutes ?? null,
+          action_type: s.action_type ?? null,
         })));
       }
     }
