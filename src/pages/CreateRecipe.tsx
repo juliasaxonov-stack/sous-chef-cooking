@@ -44,7 +44,7 @@ const CreateRecipe = () => {
       }
       if (state.imported.steps?.length) {
         setSteps(state.imported.steps.map((s: any, i: number) => ({
-          step_number: i + 1,
+          position: i + 1,
           instruction: s.instruction || s,
         })));
       }
