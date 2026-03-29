@@ -102,7 +102,7 @@ const RecipeDetail = () => {
                 <Card key={i} className="border-none">
                   <CardContent className="p-4 flex gap-3">
                     <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center shrink-0 font-semibold mt-0.5">
-                      {step.step_number}
+                      {step.position}
                     </span>
                     <p className="text-base leading-relaxed">{step.instruction}</p>
                   </CardContent>

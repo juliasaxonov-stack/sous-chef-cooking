@@ -25,7 +25,7 @@ const CreateRecipe = () => {
     { name: "", quantity: "", unit: "", sort_order: 0 },
   ]);
   const [steps, setSteps] = useState<Step[]>([
-    { step_number: 1, instruction: "" },
+    { position: 1, instruction: "" },
   ]);
 
   // Pre-fill from import or existing recipe
@@ -44,7 +44,7 @@ const CreateRecipe = () => {
       }
       if (state.imported.steps?.length) {
         setSteps(state.imported.steps.map((s: any, i: number) => ({
-          step_number: i + 1,
+          position: i + 1,
           instruction: s.instruction || s,
         })));
       }
@@ -75,11 +75,11 @@ const CreateRecipe = () => {
   };
 
   const addStep = () => {
-    setSteps([...steps, { step_number: steps.length + 1, instruction: "" }]);
+    setSteps([...steps, { position: steps.length + 1, instruction: "" }]);
   };
 
   const removeStep = (index: number) => {
-    setSteps(steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, step_number: i + 1 })));
+    setSteps(steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, position: i + 1 })));
   };
 
   const updateStep = (index: number, value: string) => {

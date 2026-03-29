@@ -14,26 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
-      ingredients: {
+      recipe_ingredients: {
         Row: {
+          canonical_name: string | null
           id: string
           name: string
+          optional: boolean
+          original_text: string | null
+          preparation: string | null
           quantity: string | null
           recipe_id: string
           sort_order: number
           unit: string | null
         }
         Insert: {
+          canonical_name?: string | null
           id?: string
           name: string
+          optional?: boolean
+          original_text?: string | null
+          preparation?: string | null
           quantity?: string | null
           recipe_id: string
           sort_order?: number
           unit?: string | null
         }
         Update: {
+          canonical_name?: string | null
           id?: string
           name?: string
+          optional?: boolean
+          original_text?: string | null
+          preparation?: string | null
           quantity?: string | null
           recipe_id?: string
           sort_order?: number
@@ -41,7 +53,45 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ingredients_recipe_id_fkey"
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_steps: {
+        Row: {
+          action_type: string | null
+          duration_minutes: number | null
+          id: string
+          instruction: string
+          position: number
+          recipe_id: string
+          timer_suggested_minutes: number | null
+        }
+        Insert: {
+          action_type?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instruction: string
+          position: number
+          recipe_id: string
+          timer_suggested_minutes?: number | null
+        }
+        Update: {
+          action_type?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instruction?: string
+          position?: number
+          recipe_id?: string
+          timer_suggested_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_steps_recipe_id_fkey"
             columns: ["recipe_id"]
             isOneToOne: false
             referencedRelation: "recipes"
@@ -53,6 +103,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          raw_recipe_text: string | null
           servings: number
           title: string
           updated_at: string
@@ -61,6 +112,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          raw_recipe_text?: string | null
           servings?: number
           title: string
           updated_at?: string
@@ -69,41 +121,13 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          raw_recipe_text?: string | null
           servings?: number
           title?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
-      }
-      steps: {
-        Row: {
-          id: string
-          instruction: string
-          recipe_id: string
-          step_number: number
-        }
-        Insert: {
-          id?: string
-          instruction: string
-          recipe_id: string
-          step_number: number
-        }
-        Update: {
-          id?: string
-          instruction?: string
-          recipe_id?: string
-          step_number?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "steps_recipe_id_fkey"
-            columns: ["recipe_id"]
-            isOneToOne: false
-            referencedRelation: "recipes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
