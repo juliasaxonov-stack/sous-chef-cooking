@@ -14,7 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ingredients: {
+        Row: {
+          id: string
+          name: string
+          quantity: string | null
+          recipe_id: string
+          sort_order: number
+          unit: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          quantity?: string | null
+          recipe_id: string
+          sort_order?: number
+          unit?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          quantity?: string | null
+          recipe_id?: string
+          sort_order?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          created_at: string
+          id: string
+          servings: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          servings?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          servings?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      steps: {
+        Row: {
+          id: string
+          instruction: string
+          recipe_id: string
+          step_number: number
+        }
+        Insert: {
+          id?: string
+          instruction: string
+          recipe_id: string
+          step_number: number
+        }
+        Update: {
+          id?: string
+          instruction?: string
+          recipe_id?: string
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "steps_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
