@@ -6,22 +6,30 @@ export interface Recipe {
   id: string;
   title: string;
   servings: number;
+  raw_recipe_text: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface Ingredient {
   id?: string;
+  original_text?: string;
   name: string;
+  canonical_name?: string;
   quantity: string;
   unit: string;
+  preparation?: string;
+  optional?: boolean;
   sort_order: number;
 }
 
 export interface Step {
   id?: string;
-  step_number: number;
+  position: number;
   instruction: string;
+  duration_minutes?: number | null;
+  timer_suggested_minutes?: number | null;
+  action_type?: string | null;
 }
 
 export interface RecipeWithDetails extends Recipe {
@@ -55,8 +63,8 @@ export const useRecipe = (id: string | undefined) => {
       if (!id) throw new Error("No recipe id");
       const [recipeRes, ingredientsRes, stepsRes] = await Promise.all([
         supabase.from("recipes").select("*").eq("id", id).single(),
-        supabase.from("ingredients").select("*").eq("recipe_id", id).order("sort_order"),
-        supabase.from("steps").select("*").eq("recipe_id", id).order("step_number"),
+        supabase.from("recipe_ingredients").select("*").eq("recipe_id", id).order("sort_order"),
+        supabase.from("recipe_steps").select("*").eq("recipe_id", id).order("position"),
       ]);
       if (recipeRes.error) throw recipeRes.error;
       return {
@@ -74,21 +82,25 @@ export const useCreateRecipe = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (data: { title: string; servings: number; ingredients: Ingredient[]; steps: Step[] }) => {
+    mutationFn: async (data: { title: string; servings: number; raw_recipe_text?: string; ingredients: Ingredient[]; steps: Step[] }) => {
       const { data: recipe, error } = await supabase
         .from("recipes")
-        .insert({ title: data.title, servings: data.servings, user_id: user!.id })
+        .insert({ title: data.title, servings: data.servings, raw_recipe_text: data.raw_recipe_text ?? null, user_id: user!.id })
         .select()
         .single();
       if (error) throw error;
 
       if (data.ingredients.length > 0) {
-        const { error: ingError } = await supabase.from("ingredients").insert(
+        const { error: ingError } = await supabase.from("recipe_ingredients").insert(
           data.ingredients.map((ing, i) => ({
             recipe_id: recipe.id,
             name: ing.name,
+            canonical_name: ing.canonical_name ?? null,
+            original_text: ing.original_text ?? null,
             quantity: ing.quantity,
             unit: ing.unit,
+            preparation: ing.preparation ?? null,
+            optional: ing.optional ?? false,
             sort_order: i,
           }))
         );
@@ -96,11 +108,14 @@ export const useCreateRecipe = () => {
       }
 
       if (data.steps.length > 0) {
-        const { error: stepError } = await supabase.from("steps").insert(
+        const { error: stepError } = await supabase.from("recipe_steps").insert(
           data.steps.map((step, i) => ({
             recipe_id: recipe.id,
-            step_number: i + 1,
+            position: i + 1,
             instruction: step.instruction,
+            duration_minutes: step.duration_minutes ?? null,
+            timer_suggested_minutes: step.timer_suggested_minutes ?? null,
+            action_type: step.action_type ?? null,
           }))
         );
         if (stepError) throw stepError;
@@ -118,35 +133,41 @@ export const useUpdateRecipe = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; title: string; servings: number; ingredients: Ingredient[]; steps: Step[] }) => {
+    mutationFn: async ({ id, ...data }: { id: string; title: string; servings: number; raw_recipe_text?: string; ingredients: Ingredient[]; steps: Step[] }) => {
       const { error } = await supabase
         .from("recipes")
-        .update({ title: data.title, servings: data.servings })
+        .update({ title: data.title, servings: data.servings, raw_recipe_text: data.raw_recipe_text ?? null })
         .eq("id", id);
       if (error) throw error;
 
-      // Replace ingredients and steps
-      await supabase.from("ingredients").delete().eq("recipe_id", id);
-      await supabase.from("steps").delete().eq("recipe_id", id);
+      await supabase.from("recipe_ingredients").delete().eq("recipe_id", id);
+      await supabase.from("recipe_steps").delete().eq("recipe_id", id);
 
       if (data.ingredients.length > 0) {
-        await supabase.from("ingredients").insert(
+        await supabase.from("recipe_ingredients").insert(
           data.ingredients.map((ing, i) => ({
             recipe_id: id,
             name: ing.name,
+            canonical_name: ing.canonical_name ?? null,
+            original_text: ing.original_text ?? null,
             quantity: ing.quantity,
             unit: ing.unit,
+            preparation: ing.preparation ?? null,
+            optional: ing.optional ?? false,
             sort_order: i,
           }))
         );
       }
 
       if (data.steps.length > 0) {
-        await supabase.from("steps").insert(
+        await supabase.from("recipe_steps").insert(
           data.steps.map((step, i) => ({
             recipe_id: id,
-            step_number: i + 1,
+            position: i + 1,
             instruction: step.instruction,
+            duration_minutes: step.duration_minutes ?? null,
+            timer_suggested_minutes: step.timer_suggested_minutes ?? null,
+            action_type: step.action_type ?? null,
           }))
         );
       }
