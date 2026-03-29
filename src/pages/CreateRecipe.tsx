@@ -21,6 +21,7 @@ const CreateRecipe = () => {
 
   const [title, setTitle] = useState("");
   const [servings, setServings] = useState(4);
+  const [rawRecipeText, setRawRecipeText] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: "", unit: "", sort_order: 0 },
   ]);
