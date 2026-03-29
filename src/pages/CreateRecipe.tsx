@@ -79,7 +79,7 @@ const CreateRecipe = () => {
   };
 
   const removeStep = (index: number) => {
-    setSteps(steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, step_number: i + 1 })));
+    setSteps(steps.filter((_, i) => i !== index).map((s, i) => ({ ...s, position: i + 1 })));
   };
 
   const updateStep = (index: number, value: string) => {
