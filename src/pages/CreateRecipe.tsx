@@ -21,6 +21,7 @@ const CreateRecipe = () => {
 
   const [title, setTitle] = useState("");
   const [servings, setServings] = useState(4);
+  const [rawRecipeText, setRawRecipeText] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: "", unit: "", sort_order: 0 },
   ]);
@@ -34,11 +35,18 @@ const CreateRecipe = () => {
     if (state?.imported) {
       setTitle(state.imported.title || "");
       setServings(state.imported.servings || 4);
+      if (state.imported.raw_recipe_text) {
+        setRawRecipeText(state.imported.raw_recipe_text);
+      }
       if (state.imported.ingredients?.length) {
         setIngredients(state.imported.ingredients.map((ing: any, i: number) => ({
           name: ing.name || "",
+          canonical_name: ing.canonical_name || "",
+          original_text: ing.original_text || "",
           quantity: ing.quantity || "",
           unit: ing.unit || "",
+          preparation: ing.preparation || "",
+          optional: ing.optional || false,
           sort_order: i,
         })));
       }
@@ -46,6 +54,8 @@ const CreateRecipe = () => {
         setSteps(state.imported.steps.map((s: any, i: number) => ({
           position: i + 1,
           instruction: s.instruction || s,
+          duration_minutes: s.duration_minutes ?? null,
+          action_type: s.action_type ?? null,
         })));
       }
     }
@@ -99,11 +109,11 @@ const CreateRecipe = () => {
 
     try {
       if (isEdit) {
-        await updateRecipe.mutateAsync({ id, title, servings, ingredients: validIngredients, steps: validSteps });
+        await updateRecipe.mutateAsync({ id, title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
         toast.success("Recipe updated!");
         navigate(`/recipe/${id}`);
       } else {
-        const recipe = await createRecipe.mutateAsync({ title, servings, ingredients: validIngredients, steps: validSteps });
+        const recipe = await createRecipe.mutateAsync({ title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
         toast.success("Recipe saved!");
         navigate(`/recipe/${recipe.id}`);
       }

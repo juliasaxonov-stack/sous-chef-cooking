@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, ChefHat, LogOut, Link as LinkIcon, Users } from "lucide-react";
 import ImportRecipeDialog from "@/components/ImportRecipeDialog";
+import PasteRecipeDialog from "@/components/PasteRecipeDialog";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -32,7 +33,10 @@ const Index = () => {
       <main className="max-w-lg mx-auto px-4 py-6 pb-24">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl">My Recipes</h2>
-          <ImportRecipeDialog />
+          <div className="flex gap-2">
+            <PasteRecipeDialog />
+            <ImportRecipeDialog />
+          </div>
         </div>
 
         {isLoading ? (
