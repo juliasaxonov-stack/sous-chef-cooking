@@ -113,7 +113,7 @@ const CreateRecipe = () => {
         toast.success("Recipe updated!");
         navigate(`/recipe/${id}`);
       } else {
-        const recipe = await createRecipe.mutateAsync({ title, servings, ingredients: validIngredients, steps: validSteps });
+        const recipe = await createRecipe.mutateAsync({ title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
         toast.success("Recipe saved!");
         navigate(`/recipe/${recipe.id}`);
       }
