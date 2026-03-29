@@ -25,7 +25,7 @@ const CreateRecipe = () => {
     { name: "", quantity: "", unit: "", sort_order: 0 },
   ]);
   const [steps, setSteps] = useState<Step[]>([
-    { step_number: 1, instruction: "" },
+    { position: 1, instruction: "" },
   ]);
 
   // Pre-fill from import or existing recipe
@@ -75,7 +75,7 @@ const CreateRecipe = () => {
   };
 
   const addStep = () => {
-    setSteps([...steps, { step_number: steps.length + 1, instruction: "" }]);
+    setSteps([...steps, { position: steps.length + 1, instruction: "" }]);
   };
 
   const removeStep = (index: number) => {
