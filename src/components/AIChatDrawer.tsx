@@ -47,7 +47,7 @@ const AIChatDrawer = ({ recipe, onClose }: AIChatDrawerProps) => {
       .maybeSingle()
       .then(({ data }) => {
         if (data?.messages && Array.isArray(data.messages)) {
-          setMessages(data.messages as Message[]);
+          setMessages(data.messages as unknown as Message[]);
         }
         setHistoryLoaded(true);
       });
@@ -57,7 +57,7 @@ const AIChatDrawer = ({ recipe, onClose }: AIChatDrawerProps) => {
   const saveHistory = useCallback(async (msgs: Message[]) => {
     if (!user) return;
     await supabase.from("recipe_chats").upsert(
-      { recipe_id: recipe.id, user_id: user.id, messages: msgs as unknown[] },
+      { recipe_id: recipe.id, user_id: user.id, messages: msgs as unknown as import("@/integrations/supabase/types").Json },
       { onConflict: "recipe_id,user_id" }
     );
   }, [recipe.id, user]);
