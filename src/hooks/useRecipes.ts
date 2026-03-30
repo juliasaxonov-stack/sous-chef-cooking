@@ -6,6 +6,8 @@ export interface Recipe {
   id: string;
   title: string;
   servings: number;
+  cuisine: string | null;
+  tags: string[];
   raw_recipe_text: string | null;
   created_at: string;
   updated_at: string;
@@ -36,6 +38,16 @@ export interface RecipeWithDetails extends Recipe {
   ingredients: Ingredient[];
   steps: Step[];
 }
+
+type RecipeSaveData = {
+  title: string;
+  servings: number;
+  cuisine?: string | null;
+  tags?: string[];
+  raw_recipe_text?: string;
+  ingredients: Ingredient[];
+  steps: Step[];
+};
 
 export const useRecipes = () => {
   const { user } = useAuth();
@@ -82,10 +94,17 @@ export const useCreateRecipe = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (data: { title: string; servings: number; raw_recipe_text?: string; ingredients: Ingredient[]; steps: Step[] }) => {
+    mutationFn: async (data: RecipeSaveData) => {
       const { data: recipe, error } = await supabase
         .from("recipes")
-        .insert({ title: data.title, servings: data.servings, raw_recipe_text: data.raw_recipe_text ?? null, user_id: user!.id })
+        .insert({
+          title: data.title,
+          servings: data.servings,
+          cuisine: data.cuisine ?? null,
+          tags: data.tags ?? [],
+          raw_recipe_text: data.raw_recipe_text ?? null,
+          user_id: user!.id,
+        })
         .select()
         .single();
       if (error) throw error;
@@ -133,18 +152,28 @@ export const useUpdateRecipe = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; title: string; servings: number; raw_recipe_text?: string; ingredients: Ingredient[]; steps: Step[] }) => {
+    mutationFn: async ({ id, ...data }: { id: string } & RecipeSaveData) => {
       const { error } = await supabase
         .from("recipes")
-        .update({ title: data.title, servings: data.servings, raw_recipe_text: data.raw_recipe_text ?? null })
+        .update({
+          title: data.title,
+          servings: data.servings,
+          cuisine: data.cuisine ?? null,
+          tags: data.tags ?? [],
+          raw_recipe_text: data.raw_recipe_text ?? null,
+        })
         .eq("id", id);
       if (error) throw error;
 
-      await supabase.from("recipe_ingredients").delete().eq("recipe_id", id);
-      await supabase.from("recipe_steps").delete().eq("recipe_id", id);
+      // Delete then re-insert (replace-all strategy)
+      const { error: delIngError } = await supabase.from("recipe_ingredients").delete().eq("recipe_id", id);
+      if (delIngError) throw delIngError;
+
+      const { error: delStepError } = await supabase.from("recipe_steps").delete().eq("recipe_id", id);
+      if (delStepError) throw delStepError;
 
       if (data.ingredients.length > 0) {
-        await supabase.from("recipe_ingredients").insert(
+        const { error: ingError } = await supabase.from("recipe_ingredients").insert(
           data.ingredients.map((ing, i) => ({
             recipe_id: id,
             name: ing.name,
@@ -157,10 +186,11 @@ export const useUpdateRecipe = () => {
             sort_order: i,
           }))
         );
+        if (ingError) throw ingError;
       }
 
       if (data.steps.length > 0) {
-        await supabase.from("recipe_steps").insert(
+        const { error: stepError } = await supabase.from("recipe_steps").insert(
           data.steps.map((step, i) => ({
             recipe_id: id,
             position: i + 1,
@@ -170,6 +200,7 @@ export const useUpdateRecipe = () => {
             action_type: step.action_type ?? null,
           }))
         );
+        if (stepError) throw stepError;
       }
     },
     onSuccess: (_, vars) => {

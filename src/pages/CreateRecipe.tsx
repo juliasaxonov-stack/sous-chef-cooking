@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CreateRecipe = () => {
@@ -21,6 +22,9 @@ const CreateRecipe = () => {
 
   const [title, setTitle] = useState("");
   const [servings, setServings] = useState(4);
+  const [cuisine, setCuisine] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [rawRecipeText, setRawRecipeText] = useState<string | null>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: "", unit: "", sort_order: 0 },
@@ -35,9 +39,9 @@ const CreateRecipe = () => {
     if (state?.imported) {
       setTitle(state.imported.title || "");
       setServings(state.imported.servings || 4);
-      if (state.imported.raw_recipe_text) {
-        setRawRecipeText(state.imported.raw_recipe_text);
-      }
+      if (state.imported.cuisine) setCuisine(state.imported.cuisine);
+      if (state.imported.tags?.length) setTags(state.imported.tags);
+      if (state.imported.raw_recipe_text) setRawRecipeText(state.imported.raw_recipe_text);
       if (state.imported.ingredients?.length) {
         setIngredients(state.imported.ingredients.map((ing: any, i: number) => ({
           name: ing.name || "",
@@ -65,6 +69,8 @@ const CreateRecipe = () => {
     if (existingRecipe) {
       setTitle(existingRecipe.title);
       setServings(existingRecipe.servings);
+      setCuisine(existingRecipe.cuisine ?? "");
+      setTags(existingRecipe.tags ?? []);
       if (existingRecipe.ingredients.length) setIngredients(existingRecipe.ingredients);
       if (existingRecipe.steps.length) setSteps(existingRecipe.steps);
     }
@@ -98,6 +104,27 @@ const CreateRecipe = () => {
     setSteps(updated);
   };
 
+  const addTag = (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+    }
+    setTagInput("");
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast.error("Please add a recipe title");
@@ -107,13 +134,23 @@ const CreateRecipe = () => {
     const validIngredients = ingredients.filter((i) => i.name.trim());
     const validSteps = steps.filter((s) => s.instruction.trim());
 
+    const saveData = {
+      title,
+      servings,
+      cuisine: cuisine.trim() || null,
+      tags,
+      raw_recipe_text: rawRecipeText ?? undefined,
+      ingredients: validIngredients,
+      steps: validSteps,
+    };
+
     try {
       if (isEdit) {
-        await updateRecipe.mutateAsync({ id, title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
+        await updateRecipe.mutateAsync({ id, ...saveData });
         toast.success("Recipe updated!");
         navigate(`/recipe/${id}`);
       } else {
-        const recipe = await createRecipe.mutateAsync({ title, servings, raw_recipe_text: rawRecipeText ?? undefined, ingredients: validIngredients, steps: validSteps });
+        const recipe = await createRecipe.mutateAsync(saveData);
         toast.success("Recipe saved!");
         navigate(`/recipe/${recipe.id}`);
       }
@@ -153,16 +190,56 @@ const CreateRecipe = () => {
               className="h-12 text-base"
             />
           </div>
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="servings">Servings</Label>
+              <Input
+                id="servings"
+                type="number"
+                min={1}
+                value={servings}
+                onChange={(e) => setServings(parseInt(e.target.value) || 1)}
+                className="h-12 text-base w-24"
+              />
+            </div>
+            <div className="space-y-2 flex-1">
+              <Label htmlFor="cuisine">Cuisine</Label>
+              <Input
+                id="cuisine"
+                placeholder="e.g. Italian, Mexican…"
+                value={cuisine}
+                onChange={(e) => setCuisine(e.target.value)}
+                className="h-12 text-base"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
           <div className="space-y-2">
-            <Label htmlFor="servings">Servings</Label>
-            <Input
-              id="servings"
-              type="number"
-              min={1}
-              value={servings}
-              onChange={(e) => setServings(parseInt(e.target.value) || 1)}
-              className="h-12 text-base w-24"
-            />
+            <Label>Tags</Label>
+            <div className="flex flex-wrap gap-1.5 p-2 min-h-[44px] border rounded-md bg-background focus-within:ring-2 focus-within:ring-ring">
+              {tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="rounded hover:text-destructive"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              <input
+                className="flex-1 min-w-[100px] text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+                placeholder={tags.length === 0 ? "Add tags (e.g. quick, vegetarian)…" : "Add more…"}
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={() => tagInput && addTag(tagInput)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Press Enter or comma to add a tag</p>
           </div>
         </div>
 

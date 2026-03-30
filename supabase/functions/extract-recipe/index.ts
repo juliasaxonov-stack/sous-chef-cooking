@@ -5,6 +5,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Canonical unit vocabulary (P2)
+const UNIT_INSTRUCTIONS = `
+Normalize all units to one of these canonical values (use the singular form):
+  Volume: tsp, tbsp, fl oz, cup, pt, qt, gal, ml, l
+  Weight: oz, lb, g, kg
+  Count: piece, slice, clove, sprig, bunch, pinch, dash, drop, can, package
+  Other: inch, cm
+If a unit doesn't fit, use the closest canonical match or leave empty.
+Store the exact original text in original_text.`;
+
+// Quantity normalization instructions (P1)
+const QUANTITY_INSTRUCTIONS = `
+Convert all quantities to decimal numbers as strings:
+  "½" → "0.5", "1/3" → "0.333", "2½" → "2.5", "one" → "1"
+If there is a range (e.g. "2-3"), use the midpoint as a string (e.g. "2.5").
+If no quantity, omit the field.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -31,7 +48,9 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You extract structured recipe data from raw text. Always return complete data.",
+            content: `You extract structured recipe data from raw text. Always return complete data.
+${QUANTITY_INSTRUCTIONS}
+${UNIT_INSTRUCTIONS}`,
           },
           {
             role: "user",
@@ -51,18 +70,24 @@ ${text.slice(0, 10000)}`,
                 type: "object",
                 properties: {
                   title: { type: "string", description: "Recipe title" },
-                  servings: { type: "number", description: "Number of servings" },
+                  servings: { type: "number", description: "Number of servings as an integer" },
+                  cuisine: { type: "string", description: "Cuisine type, e.g. Italian, Mexican, Japanese" },
+                  tags: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Short descriptive tags, e.g. ['vegetarian', 'quick', 'gluten-free']",
+                  },
                   ingredients: {
                     type: "array",
                     items: {
                       type: "object",
                       properties: {
-                        original_text: { type: "string", description: "Original ingredient line" },
-                        name: { type: "string" },
-                        canonical_name: { type: "string", description: "Normalized ingredient name" },
-                        quantity: { type: "string" },
-                        unit: { type: "string" },
-                        preparation: { type: "string", description: "e.g. diced, minced" },
+                        original_text: { type: "string", description: "Exact original ingredient line" },
+                        name: { type: "string", description: "Ingredient name only, no preparation" },
+                        canonical_name: { type: "string", description: "Normalized ingredient name, e.g. 'all-purpose flour'" },
+                        quantity: { type: "string", description: "Decimal number as string, e.g. '0.5', '2.5'" },
+                        unit: { type: "string", description: "Canonical unit from the approved vocabulary" },
+                        preparation: { type: "string", description: "Preparation note, e.g. 'diced', 'at room temperature'" },
                         optional: { type: "boolean" },
                       },
                       required: ["name"],
@@ -74,8 +99,8 @@ ${text.slice(0, 10000)}`,
                       type: "object",
                       properties: {
                         instruction: { type: "string" },
-                        duration_minutes: { type: "number", description: "Estimated duration in minutes" },
-                        action_type: { type: "string", description: "e.g. prep, cook, rest, mix" },
+                        duration_minutes: { type: "number", description: "Estimated duration in minutes as integer, if mentioned" },
+                        action_type: { type: "string", description: "One of: prep, mix, cook, bake, rest, chill, serve" },
                       },
                       required: ["instruction"],
                     },
@@ -119,7 +144,7 @@ ${text.slice(0, 10000)}`,
       });
     }
 
-    console.log("Extracted recipe:", recipe.title);
+    console.log("Extracted recipe:", recipe.title, "ingredients:", recipe.ingredients?.length, "steps:", recipe.steps?.length);
 
     return new Response(JSON.stringify(recipe), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

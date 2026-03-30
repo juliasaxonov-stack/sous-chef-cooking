@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useRecipe, useDeleteRecipe } from "@/hooks/useRecipes";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Play, Edit, Trash2, Users, MessageCircle } from "lucide-react";
@@ -66,10 +67,22 @@ const RecipeDetail = () => {
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6 pb-32">
         <div>
           <h1 className="text-3xl mb-1">{recipe.title}</h1>
-          <p className="text-muted-foreground flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            {recipe.servings} servings
-          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+            <p className="text-muted-foreground flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              {recipe.servings} servings
+            </p>
+            {recipe.cuisine && (
+              <span className="text-muted-foreground text-sm">{recipe.cuisine}</span>
+            )}
+          </div>
+          {recipe.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {recipe.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Ingredients */}
