@@ -99,71 +99,30 @@ export type Database = {
           },
         ]
       }
-      recipe_chats: {
-        Row: {
-          id: string
-          recipe_id: string
-          user_id: string
-          messages: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          recipe_id: string
-          user_id: string
-          messages?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          recipe_id?: string
-          user_id?: string
-          messages?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recipe_chats_recipe_id_fkey"
-            columns: ["recipe_id"]
-            isOneToOne: false
-            referencedRelation: "recipes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       recipes: {
         Row: {
           created_at: string
-          cuisine: string | null
           id: string
           raw_recipe_text: string | null
           servings: number
-          tags: string[]
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          cuisine?: string | null
           id?: string
           raw_recipe_text?: string | null
           servings?: number
-          tags?: string[]
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          cuisine?: string | null
           id?: string
           raw_recipe_text?: string | null
           servings?: number
-          tags?: string[]
           title?: string
           updated_at?: string
           user_id?: string
