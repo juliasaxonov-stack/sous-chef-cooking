@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      recipe_chats: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json | null
+          recipe_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json | null
+          recipe_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json | null
+          recipe_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_chats_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_ingredients: {
         Row: {
           canonical_name: string | null
@@ -99,41 +134,6 @@ export type Database = {
           },
         ]
       }
-      recipe_chats: {
-        Row: {
-          id: string
-          recipe_id: string
-          user_id: string
-          messages: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          recipe_id: string
-          user_id: string
-          messages?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          recipe_id?: string
-          user_id?: string
-          messages?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "recipe_chats_recipe_id_fkey"
-            columns: ["recipe_id"]
-            isOneToOne: false
-            referencedRelation: "recipes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       recipes: {
         Row: {
           created_at: string
@@ -141,7 +141,7 @@ export type Database = {
           id: string
           raw_recipe_text: string | null
           servings: number
-          tags: string[]
+          tags: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -152,7 +152,7 @@ export type Database = {
           id?: string
           raw_recipe_text?: string | null
           servings?: number
-          tags?: string[]
+          tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -163,7 +163,7 @@ export type Database = {
           id?: string
           raw_recipe_text?: string | null
           servings?: number
-          tags?: string[]
+          tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
